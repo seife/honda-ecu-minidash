@@ -1,0 +1,2 @@
+import minidash
+minidash.main()
