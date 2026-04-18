@@ -26,18 +26,20 @@ class t11:
     def __init__(self, buffer):
         if not buffer:
             raise ValueError
-        if len(buffer) != self.tlen:
-            raise ValueError
+        if len(buffer) < self.tlen:
+            raise ValueError(f"bufferlen {len(buffer)} < self.tlen {self.tlen}")
         self.buf = buffer
         self.parse()
 
     def parse(self):
+        # fmt: off
         self.rpm      = self.buf[0] * 256 + self.buf[1]
         self.ect_degc = self.buf[5] - 40
         self.iat_degc = self.buf[7] - 40
         self.bat_volt = self.buf[12] / 10
         self.km_h     = self.buf[13]
         self.inj      = self.buf[14] * 256 + self.buf[15]
+        # fmt: on
 
 
 # struct tableD1 {
@@ -54,8 +56,8 @@ class tD1:
     def __init__(self, buffer):
         if not buffer:
             raise ValueError
-        if len(buffer) != self.tlen:
-            raise ValueError
+        if len(buffer) < self.tlen:
+            raise ValueError(f"bufferlen {len(buffer)} < self.tlen {self.tlen}")
         self.buf = buffer
         self.parse()
 
