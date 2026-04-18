@@ -1,5 +1,6 @@
 from machine import Pin, UART
 from time import sleep, ticks_ms
+import uasyncio as asyncio
 from micropython import const
 import ubinascii
 
@@ -34,7 +35,7 @@ class honda_ecu:
         if buf:
             print("dump_buf", ubinascii.hexlify(buf, ":"))
 
-    def setup(self):
+    async def setup(self):
         if self.ser:
             self.ser.deinit()
             self.ser = None
@@ -47,9 +48,9 @@ class honda_ecu:
         self.rx = Pin(self.rxpin)
         self.last_try = now
         self.tx.low()
-        sleep(0.07)
+        await asyncio.sleep_ms(70)
         self.tx.high()
-        sleep(0.12)
+        await asyncio.sleep_ms(120)
         self.ser = UART(0, baudrate=10400, tx=self.tx, rx=self.rx)
         self.ser.init(10400, bits=8, parity=None, stop=1)
         self.ser.write(self.ECU_WAKEUP_MESSAGE)
@@ -57,14 +58,14 @@ class honda_ecu:
             print("wake ", end="")
             self.dump_buf(self.ECU_WAKEUP_MESSAGE)
         self.ser.flush()
-        sleep(0.2)
+        await asyncio.sleep_ms(200)
         self.clear_buf("after ECU_WAKEUP_MESSAGE")
         self.ser.write(self.ECU_INIT_MESSAGE)
         if self.debug:
             print("init ", end="")
             self.dump_buf(self.ECU_INIT_MESSAGE)
         self.ser.flush()
-        sleep(0.05)
+        await asyncio.sleep_ms(50)
 
         cksum = 0
         buf = self.ser.read(32)
@@ -90,7 +91,7 @@ class honda_ecu:
             cksum -= data[i]
         return cksum % 256
 
-    def get_data_table(self, table, tlen):
+    async def get_data_table(self, table, tlen):
         data = b"\x72\x05\x71" + bytes([table])
         chk = self.calc_chksum(data)
         data += bytes([chk])
@@ -105,7 +106,7 @@ class honda_ecu:
             print(len(data), len(dummy))
         now = ticks_ms()
         while not self.ser.any():
-            sleep(0.001)
+            await asyncio.sleep_ms(1)
             if ticks_ms() - now > 150:
                 print("get_data_table TIMEOUT!")
                 return None
@@ -122,4 +123,5 @@ class honda_ecu:
             print(f"Data table 0x{table:02x} wrong len {rl} expected {tlen + 4}")
         # print(f"data table 0x{table:x} ", end="")
         # self.dump_buf(response)
-        return response[4:]
+        # last byte is chksum
+        return response[4:-1]
