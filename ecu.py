@@ -19,14 +19,16 @@ class honda_ecu:
 
     def clear_buf(self, message):
         if self.ser.any():
-            print(message, end="")
+            if self.debug:
+                print(message, end="")
         else:
             return
         while self.ser.any():
             self.ser.read(1)
             if self.debug:
                 print(".", end="")
-        print()
+        if self.debug:
+            print()
 
     def dump_buf(self, buf):
         if buf:
@@ -51,14 +53,16 @@ class honda_ecu:
         self.ser = UART(0, baudrate=10400, tx=self.tx, rx=self.rx)
         self.ser.init(10400, bits=8, parity=None, stop=1)
         self.ser.write(self.ECU_WAKEUP_MESSAGE)
-        print("wakeup ", end="")
-        self.dump_buf(self.ECU_WAKEUP_MESSAGE)
+        if self.debug:
+            print("wake ", end="")
+            self.dump_buf(self.ECU_WAKEUP_MESSAGE)
         self.ser.flush()
         sleep(0.2)
         self.clear_buf("after ECU_WAKEUP_MESSAGE")
         self.ser.write(self.ECU_INIT_MESSAGE)
-        print("init ", end="")
-        self.dump_buf(self.ECU_INIT_MESSAGE)
+        if self.debug:
+            print("init ", end="")
+            self.dump_buf(self.ECU_INIT_MESSAGE)
         self.ser.flush()
         sleep(0.05)
 
