@@ -1,11 +1,12 @@
 from machine import Pin, UART
 from time import sleep, ticks_ms
 from micropython import const
+import ubinascii
 
 
 class honda_ecu:
     ECU_WAKEUP_MESSAGE = const(b"\xfe\x04\xff\xff")
-    ECU_INIT_MESSAGE   = const(b"\x72\x05\x00\xf0\x99")
+    ECU_INIT_MESSAGE = const(b"\x72\x05\x00\xf0\x99")
     ECU_SUCCESS_CHECKSUM = const(0x300)
     last_try = -2000
 
@@ -28,11 +29,8 @@ class honda_ecu:
         print()
 
     def dump_buf(self, buf):
-        if not buf:
-            return
-        for i in range(0, len(buf)):
-            print(" 0x{:02X}".format(buf[i]), end="")
-        print(" dump")
+        if buf:
+            print("dump_buf", ubinascii.hexlify(buf, ":"))
 
     def setup(self):
         if self.ser:
