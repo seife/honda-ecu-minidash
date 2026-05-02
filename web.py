@@ -77,9 +77,15 @@ def root(request):
       const json = await res.json();
       const lines = [];
       for (const k in json) {
-        lines.push(k + ':')
-        for (const l in json[k]){
-          lines.push('=> ' + l + ': ' + json[k][l]);
+        lines.push(k + ':');
+        // nested keys sorted (if it's an object)
+        const v = json[k];
+        if (v && typeof v === 'object' && !Array.isArray(v)){
+          for (const l of Object.keys(v).sort()){
+            lines.push('=> ' + l + ': ' + v[l]);
+          }
+        } else {
+          lines.push('=> ' + String(v));
         }
       }
       document.getElementById('status').textContent = lines.join('\\n');
@@ -90,7 +96,7 @@ def root(request):
   }
 
   updateStatus();
-  setInterval(updateStatus, 5000);
+  setInterval(updateStatus, 2500);
 </script>
 <p>Links:<br><a href="/settings">Settings</a><br><a href="/browse"</a>File Browser</a>
 </body></html>
