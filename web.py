@@ -56,6 +56,12 @@ def list_dir(path):
     return out
 
 
+def num_from_string(string):
+    if "," in string:
+        return float(string.replace(",", ".", 1))  # more than one comma or decimal point is bad anyway...
+    return float(string)
+
+
 @server.route("/", methods=["GET"])
 def root(request):
     state = G.state
