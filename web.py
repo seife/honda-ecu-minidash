@@ -56,10 +56,12 @@ def list_dir(path):
     return out
 
 
-def num_from_string(string):
-    if "," in string:
-        return float(string.replace(",", ".", 1))  # more than one comma or decimal point is bad anyway...
-    return float(string)
+def num_from_string(value):
+    if isinstance(value, float):
+        return value
+    if "," in value:
+        return float(value.replace(",", ".", 1))  # more than one comma or decimal point is bad anyway...
+    return float(value)
 
 
 @server.route("/", methods=["GET"])
@@ -140,7 +142,7 @@ def settings(request):
                 liter_tot += l
                 G.stats["liter_total"] = liter_tot
                 G.stats["div"] = int(fuel_tot / liter_tot)
-            except e:
+            except Exception as e:
                 resp = f"{e} \n\n"
                 if "update" in G.stats:
                     del G.stats["update"]
