@@ -103,15 +103,13 @@ async def mainloop():
     bike = ecu.honda_ecu(pin_tx=PIN_TX, pin_rx=PIN_RX, debug_mode=False)
     ecu_connected = False
     comm_err = 0
-    fuel = 0
-    mult = -1
     lastscan = -1
     scantime = 0
     lastsave = time.ticks_ms()
-    if "fuel" in G.stats:
-        fuel = G.stats["fuel"]
-    if "mult" in G.stats:
-        mult = G.stats["mult"]
+    fuel = G.stats.get("fuel", 0)
+    div = G.stats.get("div", 4051303636)  # ~ 11141085000fuel / 2.75l
+    G.stats["div"] = div
+    print(f"mainloop: fuel: {fuel} ({type(fuel)}) div: {div} ({type(div)})")
     while True:
         await asyncio.sleep_ms(250 - time.ticks_ms() % 250)
         if not ecu_connected or comm_err > 3:
@@ -123,10 +121,14 @@ async def mainloop():
 
         if "update" in G.stats:
             del G.stats["update"]
-            rotate_stats()
+            try:
+                rotate_stats()
+            except OSError:
+                pass
             save_stats(G.stats)
 
         if not ecu_connected:
+            G.state["fuel"] = fuel
             continue
 
         data_d1 = await bike.get_data_table(0xD1, tables.tD1.tlen)
@@ -153,9 +155,12 @@ async def mainloop():
         kmh = t_11.km_h
         inj = t_11.inj
         now = time.ticks_ms()
+        perhour = 0
         if lastscan > 0:
             scantime = now - lastscan
-            fuel += rpm * inj * scantime / 1000
+            add = rpm * inj * scantime / 1000
+            fuel += add
+            perhour = round(3600000 / scantime * add / div, 1)
             if now - lastsave > 60000:
                 G.stats["fuel"] = fuel
                 save_stats(G.stats)
