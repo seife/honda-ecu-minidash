@@ -120,18 +120,37 @@ def get_data(request):
 
 @server.route("/settings", methods=["GET", "POST"])
 def settings(request):
-    fuel = 0
-    if "fuel" in G.stats:
-        fuel = G.stats["fuel"]
+    fuel = int(G.stats.get("fuel", 0))
     if request.method == "POST":
         resp = ""
         form = request.form
+
+        fuel_tot = int(G.stats.get("fuel_total", 0))
         if "_reset" in form and form["_reset"] == "1":
-            G.stats["update"] = True
+            fuel_tot += fuel
+            G.stats["fuel_total"] = fuel_tot
             G.stats["fuel"] = 0
+            G.stats["update"] = True
         if "_liter" in form and form["_liter"]:
-            G.stats["liter"] = form["_liter"]
-            G.state["oldfuel"] = fuel
+            try:
+                l = num_from_string(form["_liter"])
+                G.stats["liter"] = l
+                G.stats["oldfuel"] = fuel
+                liter_tot = num_from_string(G.stats.get("liter_total", 0))
+                liter_tot += l
+                G.stats["liter_total"] = liter_tot
+                G.stats["div"] = int(fuel_tot / liter_tot)
+            except e:
+                resp = f"{e} \n\n"
+                if "update" in G.stats:
+                    del G.stats["update"]
+        if form.get("_reset_all", "") == "YES":
+            G.stats["oldfuel"] = 0
+            G.stats["liter"] = 0.0
+            G.stats["liter_total"] = 0.0
+            G.stats["fuel"] = 0
+            G.stats["update"] = True
+
         resp += "form: " + json.dumps(request.form) + "\n"
         return resp, 200, "text/plain"
     # rquests.method == GET
@@ -147,6 +166,8 @@ def settings(request):
       <span>Reset fuel counter</span>
       <input id="_reset" name="_reset" type="checkbox" value="1">
     </label>
+    <label for="_reset_all">RESET all fuel statistics (only first run, enter "YES")</label>
+    <input id="_reset_all" name="_reset_all" type="text">
     <button type="submit">Save</button>
   </form>
 </body>
