@@ -172,14 +172,15 @@ async def mainloop():
         )
         print(now, scantime, lastscan, lastsave)
         G.state = {
-            "conn": ecu_connected,
-            "rpm": rpm,
-            "ect": ect,
-            "iat": iat,
             "bat": bat,
-            "kmh": kmh,
-            "inj": inj,
+            "conn": ecu_connected,
+            "ect": ect,
             "fuel": fuel,
+            "iat": iat,
+            "inj": inj,
+            "kmh": kmh,
+            "per_h": perhour,
+            "rpm": rpm,
         }
 
 
