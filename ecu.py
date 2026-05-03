@@ -1,8 +1,13 @@
-from machine import Pin, UART
-from time import sleep, ticks_ms
+from time import ticks_ms
 import uasyncio as asyncio
 from micropython import const
 import ubinascii
+
+try:
+    from machine import Pin, UART
+except ImportError:
+    # micropython on linux does not have Pin, so get everytion from our emu.py
+    from emu import Pin, UART
 
 
 class honda_ecu:
