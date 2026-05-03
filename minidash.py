@@ -177,7 +177,8 @@ async def mainloop():
             add = rpm * inj * scantime / 1000
             fuel += add
             perhour = round(3600000 / scantime * add / div, 1)
-            if now - lastsave > 60000:
+            interval = 60000 if kmh > 0 else 5000
+            if now - lastsave > interval:
                 G.stats["fuel"] = fuel
                 save_stats(G.stats)
                 lastsave = now
