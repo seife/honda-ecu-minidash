@@ -8,7 +8,6 @@ import g_vars as G
 
 from phew import server
 
-server.logging.log_file = "/ramdisk/log.txt"
 server.logging.set_truncate_thresholds(2048, 1024)
 
 HEAD_TMPL = """
@@ -65,7 +64,7 @@ def num_from_string(value):
 
 
 @server.route("/", methods=["GET"])
-def root(request):
+def index(request):
     state = G.state
     resp = HEAD_TMPL
     resp += """
@@ -189,13 +188,13 @@ def browse(request):
         if "/secrets.py" in file:
             return "Forbidden\n", 403
         try:
-            with open(file) as f:
+            with open(root + file) as f:
                 resp = f.read()
             return resp, 200, "text/plain"
         except Exception as e:
             return f"{e}\n", 500, "text/plain"
     # print("path", path)
-    ls = list_dir(path)
+    ls = list_dir(root + path)
     # print("ls", json.dumps(ls))
     resp = HEAD_TMPL
     resp += """

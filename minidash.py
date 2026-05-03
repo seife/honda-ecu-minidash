@@ -1,8 +1,8 @@
-from machine import Pin
 import json
-import network
 import os
 from phew import dns
+from phew.server import logging
+import platform
 import time
 import uasyncio as asyncio
 import vfs
@@ -10,6 +10,17 @@ import ecu
 import tables
 import web
 import g_vars as G
+
+if platform.platform().startswith("Linux"):
+    port = 8888  # without root, no port < 1024 on linux
+    # running in "emulated mode", to test the web interface etc.
+    from emu import Pin, network, logging_datetime_string
+
+    logging.datetime_string = logging_datetime_string  # patch the function to work without machine.RTC
+else:
+    port = 80  # web server port
+    from machine import Pin
+    import network
 
 
 # import ubinascii
@@ -27,7 +38,10 @@ except:
     pass
 
 # constants
-STATSDIR = "/stats"
+global root
+root = os.getcwd()
+web.root = root  # so that it is available in web.py
+STATSDIR = root + "/stats"
 PIN_TX = 0
 PIN_RX = 1
 
@@ -62,7 +76,9 @@ class RAMBlockDev:
 # 6k should be enough, we clip the file at 2k
 bdev = RAMBlockDev(512, 12)
 vfs.VfsLfs2.mkfs(bdev)
-vfs.mount(bdev, "/ramdisk")
+vfs.mount(bdev, root + "/ramdisk")
+web.server.logging.log_file = root + "/ramdisk/log.txt"
+
 # end ramdisk
 
 G.state = {"conn": False}
@@ -216,10 +232,15 @@ def main():
     print("wlan", G.wlan.ifconfig())
     print("w_ap", G.w_ap.ifconfig())
     x = G.w_ap.ifconfig()
-    dns.run_catchall(x[0])
     try:
-        os.mkdir("/stats")
-    except OSError:
+        dns.run_catchall(x[0])
+    except OSError as e:  # on a linux host, port 53 is not available to non-root
+        print(f"no catchall dns (not running as root probably, which is OK)... {e}")
+    try:
+        print(f"stats dir: {STATSDIR}")
+        os.mkdir(STATSDIR)
+    except OSError as e:
+        print(f"mkdir stats: {e}")
         pass
     G.stats = load_stats()
     # Phew! internals: there is already a "run all tasks" routine...
@@ -227,7 +248,7 @@ def main():
     loop.create_task(mainloop())
     loop.create_task(wifi_led())
     # adds the Phew! task, runs all...
-    web.server.run()
+    web.server.run(port=port)
     # loop.run_forever()
 
 
