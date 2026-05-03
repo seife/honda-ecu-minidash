@@ -27,15 +27,15 @@ else:
 # secrets.py contains
 # ssid = "my cool ssid"
 # password = "my secret password"
-class secrets:
-    ssid = ""
-    password = ""
-
-
 try:
     import secrets
-except:
-    pass
+
+    client_ssid = secrets.ssid
+    client_password = secrets.password
+except ImportError:
+    # no secrets.py...
+    client_ssid = ""
+    client_password = ""
 
 # constants
 global root
@@ -224,8 +224,8 @@ async def wifi_led():
 def main():
     G.wlan = network.WLAN(network.STA_IF)
     G.wlan.active(True)
-    # print(f"secrets: '{secrets.ssid}' '{secrets.password}'")
-    G.wlan.connect(secrets.ssid, secrets.password)
+    # print(f"secrets: '{client_ssid}' '{client_password}'")
+    G.wlan.connect(client_ssid, client_password)
     G.w_ap = network.WLAN(network.AP_IF)
     G.w_ap.config(essid="pico", password="12345678")
     G.w_ap.active(True)
