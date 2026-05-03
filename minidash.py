@@ -123,7 +123,7 @@ async def mainloop():
     scantime = 0
     lastsave = time.ticks_ms()
     fuel = G.stats.get("fuel", 0)
-    div = G.stats.get("div", 4051303636)  # ~ 11141085000fuel / 2.75l
+    div = G.stats.get("div", 4068017877)  # ~ 36408760000/8.95l
     G.stats["div"] = div
     print(f"mainloop: fuel: {fuel} ({type(fuel)}) div: {div} ({type(div)})")
     while True:
@@ -181,6 +181,7 @@ async def mainloop():
                 G.stats["fuel"] = fuel
                 save_stats(G.stats)
                 lastsave = now
+                G.lastsave = now
         lastscan = now
         print(
             f"rpm {rpm} ect {ect} iat {iat} bat {bat} kmh {kmh} inj {inj} sw1 {t_d1.sw1} eng {t_d1.eng} fuel {fuel} ",

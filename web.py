@@ -115,7 +115,21 @@ def index(request):
 def get_data(request):
     # xxx = {"conn": True, "rpm": 2345, "ect": 53, "iat": 18, "bat": 13.9, "kmh": 66, "inj": 1234, "fuel": 1234213421}
     # resp = {"state": xxx, "stats": G.stats, "time": {"now": time.time()}}
-    resp = {"state": G.state, "stats": G.stats, "time": {"now": time.time()}}
+    state = G.state
+    try:
+        state["liter"] = round(state["fuel"] / G.stats["div"], 3)
+        kmh = state.get("kmh", 0)
+        if kmh > 0:
+            per_h = state.get("per_h", 0)
+            state["per_100"] = round(per_h * 100 / kmh, 2)
+    except Exception as e:
+        print(f"get_data exc {e}")
+    now = time.ticks_ms()
+    resp = {
+        "state": state,
+        "stats": G.stats,
+        "time": {"uptime": round(now / 1000, 1), "lastsave": round((now - G.lastsave) / 1000, 1)},
+    }
     return json.dumps(resp), 200, "application/json"
 
 
