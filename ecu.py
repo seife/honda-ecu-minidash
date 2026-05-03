@@ -43,10 +43,10 @@ class honda_ecu:
         if now - self.last_try < 2000:
             return False
         # after the pins have been used for UART, they can no longer be used for
-        # plain GPIO stuf unless reinitialized... so do it here.
+        # plain GPIO stuff unless reinitialized... so do it here.
+        self.last_try = now
         self.tx = Pin(self.txpin, mode=Pin.OUT)
         self.rx = Pin(self.rxpin)
-        self.last_try = now
         self.tx.low()
         await asyncio.sleep_ms(70)
         self.tx.high()
@@ -120,7 +120,7 @@ class honda_ecu:
             self.dump_buf(response)
             return None
         if rl != tlen + 5:
-            print(f"Data table 0x{table:02x} wrong len {rl} expected {tlen + 4}")
+            print(f"Data table 0x{table:02x} wrong len {rl} expected {tlen + 5}")
         # print(f"data table 0x{table:x} ", end="")
         # self.dump_buf(response)
         # last byte is chksum
