@@ -40,6 +40,8 @@ except ImportError:
 # constants
 global root
 root = os.getcwd()
+if root.endswith("/"):  # on real board...
+    root = root[:-1]
 web.root = root  # so that it is available in web.py
 STATSDIR = root + "/stats"
 PIN_TX = 0
