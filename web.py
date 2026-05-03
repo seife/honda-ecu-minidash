@@ -135,8 +135,6 @@ def settings(request):
         if "_liter" in form and form["_liter"]:
             try:
                 liter = num_from_string(form["_liter"])
-                G.stats["liter"] = l
-                G.stats["oldfuel"] = fuel
                 liter_tot = num_from_string(G.stats.get("liter_total", 0))
                 liter_tot += liter
                 G.stats["liter_total"] = liter_tot
@@ -146,8 +144,6 @@ def settings(request):
                 if "update" in G.stats:
                     del G.stats["update"]
         if form.get("_reset_all", "") == "YES":
-            G.stats["oldfuel"] = 0
-            G.stats["liter"] = 0.0
             G.stats["liter_total"] = 0.0
             G.stats["fuel"] = 0
             G.stats["update"] = True
