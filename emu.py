@@ -127,4 +127,4 @@ class network:
 
 def logging_datetime_string():
     dt = time.localtime()
-    return "{0:04d}-{1:02d}-{2:02d} {4:02d}:{5:02d}:{6:02d}".format(*dt)
+    return "{0:04d}-{1:02d}-{2:02d} {3:02d}:{4:02d}:{5:02d}".format(*dt)
