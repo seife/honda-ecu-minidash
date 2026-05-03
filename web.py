@@ -9,6 +9,7 @@ import g_vars as G
 from phew import server
 
 server.logging.set_truncate_thresholds(2048, 1024)
+root = ""  # will be set via web.root=... from outside
 
 HEAD_TMPL = """
 <!doctype html>
@@ -44,7 +45,7 @@ def list_dir(path):
             st = os.stat(f"{path}/{name}")
             is_dir = (st[0] & 0x4000) != 0
             size = st[6]
-        except Exception as e:
+        except Exception:  # ramdisk mount point does not want to stat?
             if name == "ramdisk" and path == "/":
                 is_dir = True
             else:
@@ -65,7 +66,6 @@ def num_from_string(value):
 
 @server.route("/", methods=["GET"])
 def index(request):
-    state = G.state
     resp = HEAD_TMPL
     resp += """
 <body>
@@ -134,11 +134,11 @@ def settings(request):
             G.stats["update"] = True
         if "_liter" in form and form["_liter"]:
             try:
-                l = num_from_string(form["_liter"])
+                liter = num_from_string(form["_liter"])
                 G.stats["liter"] = l
                 G.stats["oldfuel"] = fuel
                 liter_tot = num_from_string(G.stats.get("liter_total", 0))
-                liter_tot += l
+                liter_tot += liter
                 G.stats["liter_total"] = liter_tot
                 G.stats["div"] = int(fuel_tot / liter_tot)
             except Exception as e:
@@ -179,10 +179,7 @@ def settings(request):
 
 @server.route("/browse", methods=["GET"])
 def browse(request):
-    try:
-        path = request.query["path"]
-    except:
-        path = ""
+    path = request.query.get("path", "")
     if "file" in request.query:
         file = request.query["file"]
         if "/secrets.py" in file:

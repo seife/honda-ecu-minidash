@@ -106,8 +106,8 @@ def rotate_stats():
     for i in reversed(range(1, 9)):
         name = "data.json." + str(i)
         if name in statsfiles:
-            print(f"rename {STATSDIR}/{name} -> {STATSDIR}/data.json.{i+1}")
-            os.rename(f"{STATSDIR}/{name}", f"{STATSDIR}/data.json.{i+1}")
+            print(f"rename {STATSDIR}/{name} -> {STATSDIR}/data.json.{i + 1}")
+            os.rename(f"{STATSDIR}/{name}", f"{STATSDIR}/data.json.{i + 1}")
     print(f"rename {STATSDIR}/data.json -> {STATSDIR}/data.json.1")
     os.rename(f"{STATSDIR}/data.json", f"{STATSDIR}/data.json.1")
     statsfiles = os.listdir(STATSDIR)
