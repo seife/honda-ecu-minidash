@@ -1,4 +1,4 @@
-from time import ticks_ms
+from time import ticks_ms, ticks_diff
 import uasyncio as asyncio
 from micropython import const
 import ubinascii
@@ -6,7 +6,7 @@ import ubinascii
 try:
     from machine import Pin, UART
 except ImportError:
-    # micropython on linux does not have Pin, so get everytion from our emu.py
+    # micropython on linux does not have Pin, so get everything from our emu.py
     from emu import Pin, UART
 
 
@@ -45,7 +45,7 @@ class honda_ecu:
             self.ser.deinit()
             self.ser = None
         now = ticks_ms()
-        if now - self.last_try < 2000:
+        if ticks_diff(now, self.last_try) < 2000:
             return False
         # after the pins have been used for UART, they can no longer be used for
         # plain GPIO stuff unless reinitialized... so do it here.
@@ -112,7 +112,7 @@ class honda_ecu:
         now = ticks_ms()
         while not self.ser.any():
             await asyncio.sleep_ms(1)
-            if ticks_ms() - now > 150:
+            if ticks_diff(ticks_ms(), now) > 150:
                 print("get_data_table TIMEOUT!")
                 return None
         response = self.ser.read(tlen + 5)

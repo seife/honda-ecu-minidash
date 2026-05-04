@@ -3,7 +3,7 @@ import os
 from phew import dns
 from phew.server import logging
 import platform
-import time
+from time import ticks_ms, ticks_diff
 import uasyncio as asyncio
 import vfs
 import ecu
@@ -123,13 +123,13 @@ async def mainloop():
     comm_err = 0
     lastscan = -1
     scantime = 0
-    lastsave = time.ticks_ms()
+    lastsave = ticks_ms()
     fuel = G.stats.get("fuel", 0)
     div = G.stats.get("div", 4068017877)  # ~ 36408760000/8.95l
     G.stats["div"] = div
     print(f"mainloop: fuel: {fuel} ({type(fuel)}) div: {div} ({type(div)})")
     while True:
-        await asyncio.sleep_ms(250 - time.ticks_ms() % 250)
+        await asyncio.sleep_ms(250 - ticks_ms() % 250)
         if not ecu_connected or comm_err > 3:
             ecu_connected = await bike.setup()
             G.state["conn"] = ecu_connected
@@ -172,15 +172,15 @@ async def mainloop():
         bat = t_11.bat_volt
         kmh = t_11.km_h
         inj = t_11.inj
-        now = time.ticks_ms()
+        now = ticks_ms()
         perhour = 0
         if lastscan > 0:
-            scantime = now - lastscan
+            scantime = ticks_diff(now, lastscan)
             add = rpm * inj * scantime / 1000
             fuel += add
             perhour = round(3600000 / scantime * add / div, 1)
             interval = 60000 if kmh > 0 else 5000
-            if now - lastsave > interval:
+            if ticks_diff(now, lastsave) > interval:
                 G.stats["fuel"] = fuel
                 save_stats(G.stats)
                 lastsave = now

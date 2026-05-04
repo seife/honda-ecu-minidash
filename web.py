@@ -1,5 +1,5 @@
 import os
-import time
+from time import ticks_ms, ticks_diff
 import json
 import g_vars as G
 
@@ -127,11 +127,11 @@ def get_data(request):
             state["per_100"] = round(per_h * 100 / kmh, 2)
     except Exception as e:
         print(f"get_data exc {e}")
-    now = time.ticks_ms()
+    now = ticks_ms()
     resp = {
         "state": state,
         "stats": G.stats,
-        "time": {"uptime": round(now / 1000, 1), "lastsave": round((now - G.lastsave) / 1000, 1)},
+        "time": {"uptime": round(now / 1000, 1), "lastsave": round(ticks_diff(now, G.lastsave) / 1000, 1)},
     }
     return json.dumps(resp), 200, "application/json"
 
