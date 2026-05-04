@@ -1,3 +1,6 @@
+import ustruct
+
+
 # struct table11 {
 # 0  uint8_t rpm_h;
 #    uint8_t rpm_l;
@@ -33,12 +36,12 @@ class t11:
 
     def parse(self):
         # fmt: off
-        self.rpm      = self.buf[0] * 256 + self.buf[1]
+        self.rpm      = ustruct.unpack_from(">H", self.buf, 0)[0]
         self.ect_degc = self.buf[5] - 40
         self.iat_degc = self.buf[7] - 40
         self.bat_volt = self.buf[12] / 10
         self.km_h     = self.buf[13]
-        self.inj      = self.buf[14] * 256 + self.buf[15]
+        self.inj      = ustruct.unpack_from(">H", self.buf, 14)[0]
         # fmt: on
 
 
