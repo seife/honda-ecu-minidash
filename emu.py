@@ -92,9 +92,7 @@ class UART:
         self.message = ""
 
     def __chksum(self, data):
-        cksum = 0
-        for i in range(0, len(data)):
-            cksum -= data[i]
+        cksum = -sum(data)
         return cksum % 256
 
 

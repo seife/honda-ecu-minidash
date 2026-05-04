@@ -72,13 +72,11 @@ class honda_ecu:
         self.ser.flush()
         await asyncio.sleep_ms(50)
 
-        cksum = 0
         buf = self.ser.read(32)
         if not buf:
             print("ECU_INIT_MESSAGE returned None!")
             return False
-        for i in range(0, len(buf)):
-            cksum += buf[i]
+        cksum = sum(buf)
         if cksum == self.ECU_SUCCESS_CHECKSUM:
             if self.debug:
                 print("Successfully opened connection to ECU")
@@ -91,9 +89,7 @@ class honda_ecu:
         return False
 
     def calc_chksum(self, data):
-        cksum = 0
-        for i in range(0, len(data)):
-            cksum -= data[i]
+        cksum = -sum(data)
         return cksum % 256
 
     async def get_data_table(self, table, tlen):
