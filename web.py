@@ -66,8 +66,10 @@ def num_from_string(value):
 
 @server.route("/", methods=["GET"])
 def index(request):
-    resp = HEAD_TMPL
-    resp += """
+    resp = "".join(
+        [
+            HEAD_TMPL,
+            """
 <body>
 <h1>Honda ECU minidash</h1>
 <pre>
@@ -105,9 +107,10 @@ def index(request):
   updateStatus();
   setInterval(updateStatus, 2500);
 </script>
-<p>Links:<br><a href="/settings">Settings</a><br><a href="/browse"</a>File Browser</a>
-</body></html>
-    """
+<p>Links:<br><a href="/settings">Settings</a><br><a href="/browse">File Browser</a>
+</body></html>""",
+        ]
+    )
     return resp, 200, "text/html"
 
 
@@ -164,9 +167,11 @@ def settings(request):
 
         resp += "form: " + json.dumps(request.form) + "\n"
         return resp, 200, "text/plain"
-    # rquests.method == GET
-    resp = HEAD_TMPL
-    resp += """
+    # requests.method == GET
+    resp = "".join(
+        [
+            HEAD_TMPL,
+            """
 <body>
   <h1>Settings</h1>
   <h2><a href="/">Home</a><br></h2>
@@ -183,7 +188,9 @@ def settings(request):
   </form>
 </body>
 </html>
-"""
+""",
+        ]
+    )
     return resp, 200, "text/html"
 
 
@@ -201,28 +208,24 @@ def browse(request):
         except Exception as e:
             return f"{e}\n", 500, "text/plain"
     # print("path", path)
-    ls = list_dir(root + path)
+    # ls = list_dir(root + path)
     # print("ls", json.dumps(ls))
-    resp = HEAD_TMPL
-    resp += """
-<body>
-  <h1>File Browser</h1>
-  <h2><a href="/">Home</a><br></h2>
-  <table>
-    <tr><td><b>Name</b></td><td><b>Size</b></td></tr>
-"""
-    if path:
-        np = path.rsplit("/", 1)[0]
-        resp += f'    <tr><td><a href="/browse?path={np}">..</a></td><td>[Up]</td></tr>\n'
-    for i in ls:
-        resp += "    <tr><td>"
-        if i[1]:
-            resp += f'<a href="/browse?path={path}/{i[0]}">{i[0]}/</a></td><td>[DIR]</td></tr>\n'
-        else:
-            resp += f'<a href="/browse?file={path}/{i[0]}">{i[0]}</a></td><td>{i[2]}</td></tr>\n'
-    resp += "  </table>\n</body>\n</html>\n"
-    # print(resp)
-    return resp, 200, "text/html"
+
+    def generate():
+        yield HEAD_TMPL
+        yield '<body>\n  <h1>File Browser</h1>\n  <h2><a href="/">Home</a><br></h2>\n'
+        yield "  <table>\n    <tr><td><b>Name</b></td><td><b>Size</b></td></tr>\n"
+        if path:
+            np = path.rsplit("/", 1)[0]
+            yield f'    <tr><td><a href="/browse?path={np}">..</a></td><td>[Up]</td></tr>\n'
+        for name, is_dir, size in list_dir(root + path):
+            if is_dir:
+                yield f'    <tr><td><a href="/browse?path={path}/{name}">{name}/</a></td><td>[DIR]</td></tr>\n'
+            else:
+                yield f'    <tr><td><a href="/browse?file={path}/{name}">{name}</a></td><td>{size}</td></tr>\n'
+        yield "  </table>\n</body>\n</html>\n"
+
+    return generate(), 200, "text/html"
 
 
 @server.route("/generate_204", methods=["GET"])
