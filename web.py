@@ -118,9 +118,11 @@ def index(request):
 def get_data(request):
     # xxx = {"conn": True, "rpm": 2345, "ect": 53, "iat": 18, "bat": 13.9, "kmh": 66, "inj": 1234, "fuel": 1234213421}
     # resp = {"state": xxx, "stats": G.stats, "time": {"now": time.time()}}
-    state = G.state
+    state = dict(G.state)  # shallow copy to avoid feeding back changes
     try:
-        state["liter"] = round(state["fuel"] / G.stats["div"], 3)
+        div = G.stats.get("div", 0)
+        if div:  # avoid division by zero, even though this is hardly possible as div is pre-set
+            state["liter"] = round(state["fuel"] / div, 3)
         kmh = state.get("kmh", 0)
         if kmh > 0:
             per_h = state.get("per_h", 0)
@@ -155,7 +157,7 @@ def settings(request):
                 liter_tot = num_from_string(G.stats.get("liter_total", 0))
                 liter_tot += liter
                 G.stats["liter_total"] = liter_tot
-                G.stats["div"] = int(fuel_tot / liter_tot)
+                G.stats["div"] = int(fuel_tot / liter_tot)  # if liter_tot == 0 this will raise an Exception
             except Exception as e:
                 resp = f"{e} \n\n"
                 if "update" in G.stats:
