@@ -32,11 +32,9 @@ class UART:
     def __init__(self, num=0, baudrate=0, tx=Pin(0), rx=Pin(1)):
         self.message = ""
         random.seed()
-        pass
 
     def init(self, baud, bits, parity, stop):
         self.message = ""
-        pass
 
     def write(self, message):
         init = b"\x72\x05\x00\xf0\x99"
@@ -92,7 +90,6 @@ class UART:
 
     def deinit(self):
         self.message = ""
-        pass
 
     def __chksum(self, data):
         cksum = 0

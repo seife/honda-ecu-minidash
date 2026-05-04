@@ -245,7 +245,6 @@ def main():
         os.mkdir(STATSDIR)
     except OSError as e:
         print(f"mkdir stats: {e}")
-        pass
     G.stats = load_stats()
     # Phew! internals: there is already a "run all tasks" routine...
     loop = web.server.loop
