@@ -38,7 +38,6 @@ except ImportError:
     client_password = ""
 
 # constants
-global root
 root = os.getcwd()
 if root.endswith("/"):  # on real board...
     root = root[:-1]
