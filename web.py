@@ -150,6 +150,7 @@ def settings(request):
             fuel_tot += fuel
             G.stats["fuel_total"] = fuel_tot
             G.stats["fuel"] = 0
+            G.stats["km"] = 0
             G.stats["update"] = True
         if "_liter" in form and form["_liter"]:
             try:

@@ -123,6 +123,7 @@ async def mainloop():
     lastscan = -1
     scantime = 0
     lastsave = ticks_ms()
+    km = G.stats.get("km", 0)
     fuel = G.stats.get("fuel", 0)
     div = G.stats.get("div", 4068017877)  # ~ 36408760000/8.95l
     G.stats["div"] = div
@@ -131,7 +132,11 @@ async def mainloop():
         await asyncio.sleep_ms(250 - ticks_ms() % 250)
         if not ecu_connected or comm_err > 3:
             ecu_connected = await bike.setup()
-            G.state["conn"] = ecu_connected
+            G.state = {
+                "conn": ecu_connected,
+                "fuel": fuel,
+                "km": round(km, 3)
+            }
             lastscan = -1
             if ecu_connected:
                 comm_err = 0
@@ -142,10 +147,12 @@ async def mainloop():
                 rotate_stats()
             except OSError:
                 pass
+            # the "update" case usually resets fuel to 0 (in web.py),
+            # so we need to update the value here, too
+            fuel = G.stats.get("fuel", 0)
             save_stats(G.stats)
 
         if not ecu_connected:
-            G.state["fuel"] = fuel
             continue
 
         data_d1 = await bike.get_data_table(0xD1, tables.tD1.tlen)
@@ -184,6 +191,8 @@ async def mainloop():
                 save_stats(G.stats)
                 lastsave = now
                 G.lastsave = now
+            km += kmh * scantime / 3600000
+            G.stats["km"] = km
         lastscan = now
         print(
             f"rpm {rpm} ect {ect} iat {iat} bat {bat} kmh {kmh} inj {inj} sw1 {t_d1.sw1} eng {t_d1.eng} fuel {fuel} ",
@@ -197,6 +206,7 @@ async def mainloop():
             "fuel": fuel,
             "iat": iat,
             "inj": inj,
+            "km": round(km, 3),
             "kmh": kmh,
             "per_h": perhour,
             "rpm": rpm,
