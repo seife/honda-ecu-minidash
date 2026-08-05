@@ -183,7 +183,10 @@ def index(request):
   updateStatus();
   setInterval(updateStatus, 2500);
 </script>
-<p>Links:<br><a href="/settings">Settings</a><br><a href="/browse">File Browser</a>
+<p>Links:<br>
+<a href="/settings">Settings</a><br>
+<a href="/browse">File Browser</a><br>
+<a href="/minimal">Minimal dashboard</a><br>
 </body></html>""",
         ]
     )
@@ -316,3 +319,72 @@ def gen_204(request):
 @server.catchall()
 def catchall(request):
     return "Not found", 404
+
+
+# Minimal dashboard - small page showing speed, rpm, consumption
+@server.route("/minimal", methods=["GET"])
+def minimal(request):
+    # This page reads /api/status and shows a small set of values
+    resp = "".join(
+        [
+            HEAD_TMPL,
+            """
+<body>
+<!--
+  <h1>Minimal Dashboard</h1>
+-->
+  <div style="display:flex;gap:18px;align-items:center">
+    <div style="background:#0b1220;color:#e6eef8;padding:16px;border-radius:10px;min-width:120px;text-align:center">
+      <div style="font-size:0.9rem;color:#9fb3d6">Speed</div>
+      <div id="speed" style="font-size:2.4rem;font-weight:700">— <span style="font-size:0.9rem">km/h</span></div>
+      <div id="speed-upd" style="font-size:0.8rem;color:#7f9fc3">waiting…</div>
+    </div>
+    <div style="background:#0b1220;color:#e6eef8;padding:16px;border-radius:10px;min-width:120px;text-align:center">
+      <div style="font-size:0.9rem;color:#9fb3d6">RPM</div>
+      <div id="rpm" style="font-size:2.4rem;font-weight:700">— <span style="font-size:0.9rem">rpm</span></div>
+      <div id="rpm-upd" style="font-size:0.8rem;color:#7f9fc3">waiting…</div>
+    </div>
+    <div style="background:#0b1220;color:#e6eef8;padding:16px;border-radius:10px;min-width:120px;text-align:center">
+      <div style="font-size:0.9rem;color:#9fb3d6">Consumption</div>
+      <div id="cons" style="font-size:2.4rem;font-weight:700">— <span style="font-size:0.9rem">L/100km</span></div>
+      <div id="cons-upd" style="font-size:0.8rem;color:#7f9fc3">waiting…</div>
+    </div>
+  </div>
+  <p><a href="/">Home</a></p>
+<script>
+  async function update(){
+    try{
+      const res = await fetch('/api/status');
+      if(!res.ok) throw new Error('HTTP '+res.status);
+      const j = await res.json();
+      const s = j.state || j;
+      const speed = s.kmh;
+      const rpm = s.rpm;
+      const per100 = s.per_100;
+      if (document.getElementById('speed').firstChild)
+        document.getElementById('speed').firstChild.nodeValue = (speed===undefined? '—' : String(speed));
+      if (document.getElementById('rpm').firstChild)
+        document.getElementById('rpm').firstChild.nodeValue = (rpm===undefined? '—' : String(rpm));
+      if (document.getElementById('cons').firstChild)
+        document.getElementById('cons').firstChild.nodeValue = (per100===undefined? '—' : String(per100));
+      const ts = new Date();
+      const t = ts.toLocaleTimeString();
+      document.getElementById('speed-upd').textContent = 'updated: ' + t;
+      document.getElementById('rpm-upd').textContent = 'updated: ' + t;
+      document.getElementById('cons-upd').textContent = 'updated: ' + t;
+    }catch(e){
+      console.error(e);
+      document.getElementById('speed-upd').textContent = 'offline';
+      document.getElementById('rpm-upd').textContent = 'offline';
+      document.getElementById('cons-upd').textContent = 'offline';
+    }
+  }
+  update();
+  setInterval(update, 1000);
+</script>
+</body>
+</html>
+""",
+        ],
+    )
+    return resp, 200, "text/html"
