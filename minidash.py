@@ -132,11 +132,7 @@ async def mainloop():
         await asyncio.sleep_ms(250 - ticks_ms() % 250)
         if not ecu_connected or comm_err > 3:
             ecu_connected = await bike.setup()
-            G.state = {
-                "conn": ecu_connected,
-                "fuel": fuel,
-                "km": round(km, 3)
-            }
+            G.state = {"conn": ecu_connected, "fuel": fuel, "km": round(km, 3)}
             lastscan = -1
             if ecu_connected:
                 comm_err = 0
