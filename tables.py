@@ -34,11 +34,14 @@ class t11:
         self.buf = buffer
         self.parse()
 
+    def sensor_degc(self, offset):
+        return self.buf[offset] - 40
+
     def parse(self):
         # fmt: off
         self.rpm      = ustruct.unpack_from(">H", self.buf, 0)[0]
-        self.ect_degc = self.buf[5] - 40
-        self.iat_degc = self.buf[7] - 40
+        self.ect_degc = self.sensor_degc(5)
+        self.iat_degc = self.sensor_degc(7)
         self.bat_volt = self.buf[12] / 10
         self.km_h     = self.buf[13]
         self.inj      = ustruct.unpack_from(">H", self.buf, 14)[0]
