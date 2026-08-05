@@ -1,6 +1,7 @@
 import os
 from time import ticks_ms, ticks_diff
 import json
+from micropython import const
 import g_vars as G
 
 # from ahttpserver import HTTPResponse, HTTPServer, sendfile
@@ -11,7 +12,7 @@ from phew import server
 server.logging.set_truncate_thresholds(2048, 1024)
 root = ""  # will be set via web.root=... from outside
 
-HEAD_TMPL = """
+HEAD_TMPL = const("""
 <!doctype html>
 <html lang="en">
 <head>
@@ -25,8 +26,83 @@ HEAD_TMPL = """
     button { margin-top:12px; padding:8px 12px; }
   </style>
   <title>Honda minidash</title>
+  <link href="data:image/x-icon;base64,
+AAABAAEAgIACAAEAAQAwEAAAFgAAACgAAACAAAAAAAEAAAEAAQAAAAAAAAgAAAAAAAAAAAAAAgAA
+AAIAAAD///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAf+P///////AAAAAAAAAAAP/H//////
+/gAAAAAAAAAAD/j///////gAAAAAAAAAAB/x///////gAAAAAAAAAAA/4///////wAAAAAAAAAAA
+f8f//////wAAAAAAAAAAAP+D//////4AAAAAAAAAAAH/AAP////4AAAAAAAAAAAD/j+AAf//4AAA
+AAAAAAAAB/h//4AA/8AAAAAAAAAAAA/w////gAAAAAAAAAAAAAAf4f////8AAAAAAAAAAAAAP8f/
+////+AAAAAAAAAAAAH+H//////gAAAAAAAAAAAD/AP//////gAAAAAAAAAAB/jgH//////4AAAAA
+AAAAA/x/wD///////AAAAAAAAAf4//4A///////wAAAAAAAP8f//+Af//////gAAAAAAH+P////A
+P/////8AAAAAAB/D/////gD/////wAAAAAA/gD////4AB////+AAAAAAfx4H////AAA////gAAAA
+AH4/4H////AAAf//8AAAAAD8f/4H////gAAH//gAAAAA/H//wH////wAAD/8AAAAAPx///wH////
+4AAB/gAAAAD8f///wH////+AAAcAAAAA/h////AH/////AAAAAAAAP8H///wAP/////gAAAAAAB/
+gP///AAP/////wAAAAAAf/Af///AAP/////4AAAAAD/+A///+AAP/////4AAAAAf/4B///+AAP//
+///gAAAAD//wD///+AAP////+AAAAAf//gD///8AAP////wAAAAB///AH///8AAf///+AAAAAH//
++AP///8AAf///gAAAAAP//8Af///8AAf//8AAAAAA///wA////4AAf//gAAAAAB///gB////4AAf
+/4AAAAAAH///AD////4AAf/AAAAAAAP//+AH////wAAf4AAAAAAA///8AP////wAA+AAAAAAAB//
+/wAf////wAAwAAAAAAAH///gA/////gAAAAAAAAAAf///AB/////gAAAAAAAAAA///+AD/////gA
+AAAAAAAAD///8AH/////gAAAAAAAAAH///wAP////+AAAAAAAAAAf///gAf////4AAAAAAAAAA//
+//AA/////gAAAAAAAAAD///+AB////8AAAAAAAAAAH///8AD////AAAAAAAAAAAf///4AH///4AA
+AAAAAAAAB////gAP///AAAAAAAAAAAD////AAf//4AAAAAAAAAAAP///+AA//+AAAAAAAAAAAAf/
+//8AB//wAAAAAAAAAAAB////wAD/8AAAAAAAAAAAAD////gAH/gAAAAAAAAAAAAP////AAP4AAAA
+AAAAAAAAA////+AA/AAAAAAAAAAAAAB////8ABwAAAAAAAAAAAAAH////wAAAAAAAAAAAAAAAAP/
+///gAAAAAAAAAAAAAAAA/////AAAAAAAAAAAAAAAAB////8AAAAAAAAAAAAAAAAH////4AAAAAAA
+AAAAAAAAAf////gAAAAAAAAAAAAAAAA////+AAAAAAAAAAAAAAAAD////wAAAAAAAAAAAAAAAAH/
+//+AAAAAAAAAAAAAAAAAf///wAAAAAAAAAAAAAAAAB///+AAAAAAAAAAAAAAAAAD///gAAAAAAAA
+AAAAAAAAAP//8AAAAAAAAAAAAAAAAAA///AAAAAAAAAAAAAAAAAAD//4AAAAAAAAAAAAAAAAAAP/
++AAAAAAAAAAAAAAAAAAAf/gAAAAAAAAAAAAAAAAAAB/8AAAAAAAAAAAAAAAAAAAH/AAAAAAAAAAA
+AAAAAAAAAf4AAAAAAAAAAAAAAAAAAAB+AAAAAAAAAAAAAAAAAAAAHwAAAAAAAAAAAAAAAAAAAAcA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAA////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////+AHAAAAAAAD///////////ADgAAAAAAB////
+///////wBwAAAAAAB///////////4A4AAAAAAB///////////8AcAAAAAAA///////////+AOAAA
+AAAA////////////AHwAAAAAAf///////////gD//AAAAAf///////////wBwH/+AAAf////////
+///4B4AAf/8AP///////////8A8AAAB//////////////+AeAAAAAP/////////////AOAAAAAAH
+////////////gHgAAAAAB////////////wD/AAAAAAB///////////4Bx/gAAAAAAf/////////8
+A4A/wAAAAAAD////////+AcAAf8AAAAAAA////////AOAAAH+AAAAAAB///////gHAAAAD/AAAAA
+AP//////4DwAAAAB/wAAAAA//////8B/wAAAAf/4AAAAH/////+A4fgAAAD//8AAAB//////gcAf
+gAAAD//+AAAP/////wOAAfgAAAB///gAB/////8DgAA/gAAAA///wAP/////A4AAA/gAAAAf//4B
+/////wOAAAA/gAAAAH//+P////8B4AAAD/gAAAAD////////APgAAA//AAAAAB///////4B/AAAD
+//AAAAAA//////+AD+AAAD//AAAAAAf/////wAH8AAAH//AAAAAAf////+AAf4AAAH//AAAAAB//
+///wAA/wAAAH//AAAAAH////+AAB/wAAAP//AAAAA/////4AAD/gAAAP/+AAAAH/////gAAH/AAA
+AP/+AAAB//////AAAP+AAAAP/+AAAP/////8AAA/8AAAAf/+AAB//////4AAB/4AAAAf/+AAf///
+///gAAD/wAAAAf/+AD///////AAAH/gAAAA//+Af//////8AAAP/AAAAA//8H///////4AAA/+AA
+AAA//8////////gAAB/8AAAAB//////////+AAAD/4AAAAB//////////8AAAH/wAAAAB///////
+///wAAAP/gAAAAB//////////gAAA//AAAAAH/////////+AAAB/+AAAAAf/////////8AAAD/8A
+AAAB//////////wAAAH/4AAAAP//////////gAAAP/wAAAD//////////+AAAAf/gAAAf///////
+///4AAAB//AAAD///////////wAAAD/+AAAf///////////AAAAH/8AAH///////////+AAAAP/4
+AA////////////4AAAA//wAP////////////wAAAB//gB/////////////AAAAD//Af/////////
+///8AAAAH/8D/////////////4AAAAP/4//////////////gAAAA/////////////////AAAAB//
+//////////////8AAAAD////////////////4AAAAP////////////////gAAAAf////////////
+///+AAAAB////////////////8AAAAH////////////////wAAAA/////////////////gAAAH//
+//////////////+AAAA/////////////////4AAAH/////////////////wAAB//////////////
+////AAAP/////////////////8AAD//////////////////wAAf//////////////////AAH////
+//////////////+AB///////////////////4AP///////////////////gD////////////////
+///+Af///////////////////4H////////////////////g////////////////////+P//////
+////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+//////8=" rel="icon" type="image/x-icon">
 </head>
-"""
+""")
 
 
 # Helpers
